@@ -8,7 +8,7 @@ twopi = np.pi * 2
 
 
 class Model(lmfit.Model):
-    """lmfit for a sine function."""
+    """lmfit model for a sine function."""
 
     @staticmethod
     def func(xs, f, phi, of, scale):

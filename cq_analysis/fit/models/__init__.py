@@ -1,1 +1,1 @@
-from . import sine
+from . import sine, resonators
