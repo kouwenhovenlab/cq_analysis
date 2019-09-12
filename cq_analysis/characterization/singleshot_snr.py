@@ -4,12 +4,15 @@ import matplotlib.pyplot as plt
 import cmath
 
 
-def data_to_cdata(I_data, Q_data):
+def data_to_cdata(I_data, Q_data, I_data_ref=None, Q_data_ref=None):
     """
     This function takes in two arrays of data, I and Q, and combines them into a single complex array cdata
     """
 
     cdata = I_data + 1j * Q_data
+    if I_data_ref is not None:
+        cref = (I_data_ref + 1j * Q_data_ref) / np.abs(I_data_ref + 1j * Q_data_ref)
+        cdata = cdata / cref
     return cdata
 
 
