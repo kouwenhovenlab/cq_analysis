@@ -2,6 +2,17 @@ import numpy as np
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 import cmath
+from scipy.stats import norm
+
+
+def fid_from_snr(snr):
+    """
+    The function that returns fidelity value corresponding to an SNR value.
+    :param snr:
+    :return fidelity:
+    """
+    fidelity = 1 - norm.sf(snr)
+    return fidelity
 
 
 def data_to_cdata(I_data, Q_data, I_data_ref=None, Q_data_ref=None):
