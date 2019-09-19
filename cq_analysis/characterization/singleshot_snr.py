@@ -91,6 +91,8 @@ def calculate_snr(blob1, blob2, plot=False):
         plt.plot(x1, hist1 / area1, 'r+')
         plt.plot(x2, hist2 / area2, 'b+')
         plt.show()
+        print('sigma', sigma_1, sigma_2, abs(sigma_1-sigma_2))
+        print('CPH_SNR', abs(mu_1 - mu_2) / np.sqrt(sigma_1**2+sigma_2**2))
 
     # Calculate SNR using snr = delta/(2*sigma)
     snr = abs(mu_1 - mu_2) / (sigma_1 + sigma_2)
