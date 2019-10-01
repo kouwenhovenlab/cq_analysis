@@ -6,7 +6,6 @@ import lmfit
 
 twopi = np.pi * 2
 
-
 class HangerModel(lmfit.Model):
 
     @staticmethod
@@ -27,6 +26,50 @@ class HangerModel(lmfit.Model):
 
     def __init__(self):
         super().__init__(self.func)
+
+    @staticmethod
+    def guess_logic(data, fs, edge_fracs=(20, 20)):
+        e0, e1 = edge_fracs
+
+        mag, phi = np.abs(data), np.angle(data)
+        npts = fs.size
+
+        # some basic metrics of the data
+        avg0 = data[:npts // e0].mean()
+        avg1 = data[-npts // e1:].mean()
+        mag_std = np.abs(data[:npts // e0]).std()
+        mag_avg = (np.abs(avg0) + np.abs(avg1)) / 2.
+        mag_min = mag.min() / mag_avg
+
+        # guess for resonance is simply the minimal magnitude
+        f0 = fs[np.argmin(np.abs(mag - mag_avg))]
+
+        # guess for Q: guess line width from fraction of points that lie a
+        # certain distance from the mean. then compute Qs from that.
+        noutliers = np.where((mag < (mag_avg - 3. * mag_std)) | (
+            mag > (mag_avg + 3. * mag_std)))[0].size
+        fracoutliers = 0.5 * noutliers / fs.size
+        fwhm = np.abs(fs[-1] - fs[0]) * fracoutliers
+        Ql = f0 / fwhm
+        Qi = Ql / mag_min
+        Qc = Ql / np.abs(1. - mag_min)
+
+        # phase winding:
+        # look at the average derivative at the edges, and ignore obvious jumps
+        phase_diffs = np.append(np.diff(phi)[:npts // e0],
+                                np.diff(phi)[-npts // e1])
+        phase_winding = phase_diffs[np.abs(phase_diffs) < np.pi / 8.].mean()
+
+        return dict(
+            f0=fs[np.argmin(mag)],
+            Q_i=Qi,
+            Q_e_mag=Qc,
+            Q_e_phase=0,
+            amp_slope=0,
+            amp_offset=mag_avg,
+            phase_winding=phase_winding / (fs[1] - fs[0]),
+            phase_offset=phi[0],
+        )
 
     def guess(self, data, fs, edge_fracs=(20, 20)):
         e0, e1 = edge_fracs
@@ -70,5 +113,37 @@ class HangerModel(lmfit.Model):
             phase_winding=phase_winding / (fs[1] - fs[0]),
             phase_offset=phi[0],
         )
-
         return p0
+
+
+class HangerModel_kappa(lmfit.Model):
+
+    @staticmethod
+    def func(fs, f0, k_i, k_e_mag, k_e_phase, amp_slope, amp_offset,
+             phase_winding, phase_offset):
+        Q_i = f0/k_i
+        Q_e_mag = f0/k_e_mag
+        Q_e_phase = -k_e_phase
+        return HangerModel.func(fs, f0, Q_i, Q_e_mag, Q_e_phase, amp_slope, amp_offset, phase_winding, phase_offset)
+
+    def __init__(self):
+        super().__init__(self.func)
+
+    def guess(self, data, fs, edge_fracs=(20, 20)):
+        p0_q = HangerModel.guess_logic(data, fs, edge_fracs=edge_fracs)
+
+        p0 = self.make_params(
+            f0=p0_q['f0'],
+            k_i=p0_q['f0']/p0_q['Q_i'],
+            k_e_mag=p0_q['f0']/p0_q['Q_e_mag'],
+            k_e_phase=-p0_q['Q_e_phase'],
+            amp_slope=p0_q['amp_slope'],
+            amp_offset=p0_q['amp_offset'],
+            phase_winding=p0_q['phase_winding'],
+            phase_offset=p0_q['phase_offset'],
+        )
+        p0['k_e_mag'].min=0
+        p0['k_i'].min=0
+        return p0
+
+
