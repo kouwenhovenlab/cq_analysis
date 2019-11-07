@@ -69,7 +69,12 @@ def calculate_snr(blob1, blob2, plot=False):
     # Calculate the area. Needed for normalization
     area1 = np.dot((xbins1[1:] - xbins1[:-1]), hist1)
     area2 = np.dot((xbins2[1:] - xbins2[:-1]), hist2)
-
+    if plot:
+        plt.figure()
+        plothist(np.concatenate((blob1, blob2)), bins=100)
+        print('rotation:', str(phase) + ' rad')
+        plt.figure()
+        plothist(np.concatenate((blob1rot, blob2rot)), bins=100)
     # Obtain ideal parameters through the fitting function - sigma and mu
     popt1, pcov1 = opt.curve_fit(gauss, x1, hist1 / area1, maxfev=14000)
     popt2, pcov2 = opt.curve_fit(gauss, x2, hist2 / area2, maxfev=14000)
@@ -80,11 +85,7 @@ def calculate_snr(blob1, blob2, plot=False):
 
     # Set plot to true to see the plots
     if plot:
-        plt.figure()
-        plothist(np.concatenate((blob1, blob2)),bins=100)
-        print('rotation:', str(phase)+' rad')
-        plt.figure()
-        plothist(np.concatenate((blob1rot, blob2rot)), bins=100)
+
         plt.figure()
         plt.plot(x1, gauss(x1, *popt1), 'r-')
         plt.plot(x2, gauss(x2, *popt2), 'b-')
