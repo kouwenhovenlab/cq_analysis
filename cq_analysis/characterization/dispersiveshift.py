@@ -6,8 +6,9 @@ from plottr.data.datadict import datadict_to_meshgrid
 from plottr.data.qcodes_dataset import ds_to_datadict
 
 from cq_analysis.fit.models import dispersive
+from cq_analysis.fit.models import resonators
 from cq_analysis import fit
-
+from cq_analysis.characterization import resonance
 
 class DispersiveShiftData:
     @classmethod
@@ -46,6 +47,9 @@ class DispersiveShiftData:
         self.phidata = np.arctan2(self.Qdata, self.Idata)
 
         # data[gate, frequency]
+
+    def make_resonancedata(self, i):
+        return resonance.ResonanceData(self.freqdata, self.Idata[i], self.Qdata[i])
 
     def plot(self):
         fig, axs = plt.subplots(2, 2, sharey=True, sharex=True)
@@ -138,4 +142,11 @@ def fit_dispersiveshift(dispersivedata: DispersiveShiftData, plot=False):
     return fitresult
 
 
+def fit_resonances(dispersivedata: DispersiveShiftData):
+    model = resonators.HangerModel_kappa()
+    fitresult = fit.array_fit1d(model, 
+                                dispersivedata.cdata, 
+                                dispersivedata.freqdata, 
+                                guess_kws=dict(fs=dispersivedata.freqdata))
+    return fitresult
 
