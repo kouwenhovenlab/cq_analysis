@@ -7,6 +7,21 @@ import lmfit
 twopi = np.pi * 2
 
 class HangerModel(lmfit.Model):
+    """
+    An implementation of the hange model from
+    Khalil et al. Journal of Applied Physics 111, 054510 (2012)
+    Parameters:
+    - f0 [Hz] - resonator frequency
+    - Q_i [1] - internal quality factor
+    - Q_e_mag [1] - magnitude of the external quality factor
+    - Q_e_phase [rad] - phase of the external quality factor, indicating
+        mismatch between input and output impedance
+    - amp_slope [1] - additional slope of the transmission amplitude
+    - amp_offset [measurement device units] - amplitude
+        corresponding to the full transmission
+    - phase_winding [rad/Hz]
+    - phase_offset [rad]
+    """
 
     @staticmethod
     def s21_khalil(fs, f0, Q_i, Q_e_mag, Q_e_phase):
