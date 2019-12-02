@@ -88,9 +88,11 @@ def fit1d(model, data, xvals, plot=True, plot_guess=True, **kw):
     return fit_result, (fig, axes)
 
 
-def array_fit1d(model, data, xvals, axis=-1, verbose=False, **kw):
+def array_fit1d(model, data, xvals, axis=-1, verbose=False, callback=None, **kw):
     outshp = list(data.shape)
     del outshp[axis]
+    if callback is None:
+        callback = lambda :None
 
     results = {}
     for pn in model.param_names:
@@ -119,6 +121,7 @@ def array_fit1d(model, data, xvals, axis=-1, verbose=False, **kw):
             logger.warning('could not fit point: ', idx)
 
         iterator.iternext()
+        callback()
 
     return results
 
