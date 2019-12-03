@@ -142,11 +142,11 @@ def fit_dispersiveshift(dispersivedata: DispersiveShiftData, plot=False):
     return fitresult
 
 
-def fit_resonances(dispersivedata: DispersiveShiftData):
+def fit_resonances(dispersivedata: DispersiveShiftData, **kw):
     model = resonators.HangerModel_kappa()
     fitresult = fit.array_fit1d(model, 
                                 dispersivedata.cdata, 
                                 dispersivedata.freqdata, 
-                                guess_kws=dict(fs=dispersivedata.freqdata))
+                                guess_kws=dict(fs=dispersivedata.freqdata), **kw)
     return fitresult
 
