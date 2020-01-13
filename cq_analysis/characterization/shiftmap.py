@@ -62,20 +62,29 @@ class ShiftMap():
     
     def plot_CSD(self, freqindex):
         fig, axs = plt.subplots(2, 2, sharey=True, sharex=True)
-        axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata.transpose()[freqindex,...])
-        axs[0, 1].pcolormesh(self.gate1data, self.gate2data, self.Qdata.transpose()[freqindex,...])
-        axs[1, 0].pcolormesh(self.gate1data, self.gate2data, self.ampdata.transpose()[freqindex,...])
-        axs[1, 1].pcolormesh(self.gate1data, self.gate2data, self.phidata.transpose()[freqindex,...])
-        axs[1,0].set_xlabel("Gate 1 Voltage")
-        axs[1,0].set_ylabel("Gate 2 Voltage")
+        im = axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata.transpose()[freqindex,...])
+        cb = fig.colorbar(im, ax=axs[0, 0])
+        cb.set_label('I')
+        im = axs[0, 1].pcolormesh(self.gate1data, self.gate2data, self.Qdata.transpose()[freqindex,...])
+        cb = fig.colorbar(im, ax=axs[0, 1])
+        cb.set_label('Q')
+        im = axs[1, 0].pcolormesh(self.gate1data, self.gate2data, self.ampdata.transpose()[freqindex,...])
+        cb = fig.colorbar(im, ax=axs[1, 0])
+        cb.set_label('Magnitude')
+        im = axs[1, 1].pcolormesh(self.gate1data, self.gate2data, self.phidata.transpose()[freqindex,...])
+        cb = fig.colorbar(im, ax=axs[1, 1])
+        cb.set_label('Phase')
+        axs[1,0].set_xlabel("Gate 1 Voltage (V)")
+        axs[1,1].set_xlabel("Gate 1 Voltage (V)")
+        axs[0,0].set_ylabel("Gate 2 Voltage (V)")
+        axs[1,0].set_ylabel("Gate 2 Voltage (V)")
         plt.show()
         
     def make_fitCSD(self, plot=True, init_params=None):
         original_shape = self.cdata.shape
         model = resonators.HangerModel_kappa()
-        params = model.make_params()
-        if init_params is None:
-            init_params = {}
+        init_params = {} if init_params is None else init_params
+
         fitresult = fit.array_fit1d(model, 
                                     self.cdata.reshape((original_shape[0]*original_shape[1], original_shape[2])), 
                                     self.freqdata, 
@@ -84,6 +93,11 @@ class ShiftMap():
         reshaped_fitresult = fitresult
         for key in fitresult.keys():
             reshaped_fitresult[key] = np.array(fitresult[key]).reshape(original_shape[0:2])
+
         if plot:
-            plt.pcolormesh(self.gate1data, self.gate2data, reshaped_fitresult['f0'])
+            plt.pcolormesh(self.gate1data, self.gate2data, reshaped_fitresult['f0'] / 1e9)
+            plt.xlabel('Gate Voltage 1 (V)')
+            plt.ylabel('Gate Voltage 2 (V)')
+            cb = plt.colorbar()
+            cb.set_label('Fitted Frequency f0 (GHz)')
         return reshaped_fitresult
