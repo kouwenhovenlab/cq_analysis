@@ -58,7 +58,8 @@ class ResonanceData:
         """
         if fitresult is None:
             fitresult = self.fit_resonance() # Calculate resonator fit
-        init_params = dict(fitresult) # Cast fit result as dictionary
+        if not isinstance(fitresult, dict):
+            init_params = dict(fitresult.params) # Cast fit result as dictionary
         # Delete varying fit parameters to leave only constant ones
         del init_params['f0'], init_params['k_i']
         # Rewrite init_params as nested dictionary of Parameter properties
