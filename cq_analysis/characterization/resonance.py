@@ -28,11 +28,11 @@ class ResonanceData:
         axs[1].plot(self.freqdata, self.phidata)
         axs[2].plot(self.Idata, self.Qdata)
         plt.show()
+    
+    def fit_resonance(self, plot=False, **kw):
+        model = resonators.HangerModel_kappa()
 
-def fit_resonance(resonancedata: ResonanceData, plot=False, **kw):
-    model = resonators.HangerModel_kappa()
+        fitresult, _ = fit.fit1d(model, self.cdata.ravel(), self.freqdata,
+                                guess_kws=dict(fs=self.freqdata), plot=plot, plot_guess=False, **kw)
 
-    fitresult, _ = fit.fit1d(model, resonancedata.cdata.ravel(), resonancedata.freqdata,
-                             guess_kws=dict(fs=resonancedata.freqdata), plot=plot, plot_guess=False, **kw)
-
-    return fitresult
+        return fitresult

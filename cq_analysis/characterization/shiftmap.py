@@ -138,7 +138,7 @@ class ShiftMap():
         )
         reshaped_fitresult = fitresult
         for key in fitresult.keys():
-            reshaped_fitresult[key] = np.array(fitresult[key]).reshape(orig+_shape[0:2])
+            reshaped_fitresult[key] = np.array(fitresult[key]).reshape(orig_shape[0:2])
 
         if plot:
             plt.pcolormesh(self.gate1data, self.gate2data, reshaped_fitresult['f0'] / 1e9)
