@@ -102,6 +102,10 @@ class ShiftMap():
         axs[0,0].set_ylabel("Gate 2 Voltage (V)")
         axs[1,0].set_ylabel("Gate 2 Voltage (V)")
         plt.show()
+
+    def get_init_params(self, i, j):
+        """Alias for make_resonancedata().get_init_params()."""
+        return self.make_resonancedata(i, j).get_init_params()
         
     def fit_resonances(self, plot=True, init_params=None):
         """Fit (and plot) resonator response at each point in gate-space.
