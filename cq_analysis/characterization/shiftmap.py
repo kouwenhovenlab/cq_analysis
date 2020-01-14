@@ -13,6 +13,7 @@ from cq_analysis.characterization import resonance
 
 
 class ShiftMap():
+    """Class for fitting data-cubes of frequency scans along with 2 other axes."""
     @classmethod
     def from_dataset(cls, ds, gate1_name, gate2_name, freq_name, magnitude_name, phase_name):
         meshgrid = datadict_to_meshgrid(ds_to_datadict(ds))
@@ -58,9 +59,31 @@ class ShiftMap():
         self.phidata = np.arctan2(self.Qdata, self.Idata)
         
     def make_resonancedata(self, i, j):
+        """Create a ResonanceData object for a specific gate-space point.
+
+        Parameters:
+        -----------
+        i (int): Index of gate voltage point on the gate1data axis.
+        j (int): Index of gate voltage point on the gate2data axis.
+
+        Returns:
+        --------
+        ResonanceData: ResonanceData object corresponding to gate-space
+            point (i, j).
+        """
         return resonance.ResonanceData(self.freqdata, self.Idata[i][j], self.Qdata[i][j])
     
     def plot_CSD(self, freqindex):
+        """Plot charge stability diagrams of various resonator quantities.
+
+        These quantities include the I and Q data, the magnitude of the resonator
+        response, and the phase.
+
+        Parameters:
+        -----------
+        freqindex (int): index of the frequency point to determine the slice of the data
+        cube to display. freqindex must be < len(freqdata).
+        """
         fig, axs = plt.subplots(2, 2, sharey=True, sharex=True)
         im = axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata.transpose()[freqindex,...])
         cb = fig.colorbar(im, ax=axs[0, 0])
@@ -80,19 +103,42 @@ class ShiftMap():
         axs[1,0].set_ylabel("Gate 2 Voltage (V)")
         plt.show()
         
-    def make_fitCSD(self, plot=True, init_params=None):
-        original_shape = self.cdata.shape
+    def fit_resonances(self, plot=True, init_params=None):
+        """Fit (and plot) resonator response at each point in gate-space.
+
+        Fits all resonators using resonators.HangerModel_kappa, which guesses
+        any fit parameters that are not provided in init_params.
+
+        Keyword Arguments:
+        ------------------
+        plot (bool): Whether or not to plot fitted resonator frequencies as
+            a charge stability diagram.
+        init_params (dict): Dictionary of all custom parameters of the fit 
+            essentially in the form of a lmfit.Parameters object if converted 
+            to a dict -- each key of the dict is a parameter name, whose value
+            is a dict with keys corresponding to 'max', 'min' values of the 
+            parameter, if it will 'vary' or not, and the 'value' of the parameter.
+        
+        Returns:
+        --------
+        numpy.array[lmfit.model.ModelResult]: Array with the same shape as
+            (gate1data, gate2data) consisting of frequency fits at each
+            point.
+        """
+        orig_shape = self.cdata.shape
         model = resonators.HangerModel_kappa()
         init_params = {} if init_params is None else init_params
-
-        fitresult = fit.array_fit1d(model, 
-                                    self.cdata.reshape((original_shape[0]*original_shape[1], original_shape[2])), 
-                                    self.freqdata, 
-                                    guess_kws=dict(fs=self.freqdata.flatten()),
-                                    init_params=init_params)
+        fitresult = fit.array_fit1d(
+            model, 
+            self.cdata.reshape((orig_shape[0]*orig_shape[1], 
+                                orig_shape[2])), 
+            self.freqdata, 
+            guess_kws=dict(fs=self.freqdata.flatten()),
+            init_params=init_params
+        )
         reshaped_fitresult = fitresult
         for key in fitresult.keys():
-            reshaped_fitresult[key] = np.array(fitresult[key]).reshape(original_shape[0:2])
+            reshaped_fitresult[key] = np.array(fitresult[key]).reshape(orig+_shape[0:2])
 
         if plot:
             plt.pcolormesh(self.gate1data, self.gate2data, reshaped_fitresult['f0'] / 1e9)
