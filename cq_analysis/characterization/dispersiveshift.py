@@ -60,93 +60,93 @@ class DispersiveShiftData:
         plt.show()
 
 
-def get_shift(dispersivedata: DispersiveShiftData):
-    fr = dispersivedata.freqdata[np.argmin(dispersivedata.ampdata, axis=1)]
-    return np.max(fr)-np.min(fr)
+    def get_shift(self):
+        fr = self.freqdata[np.argmin(self.ampdata, axis=1)]
+        return np.max(fr)-np.min(fr)
 
-def make_cutout(dispersivedata: DispersiveShiftData, plot=False):
-    # do some magic
-    #estimate resonance frequencies
-    fr = dispersivedata.freqdata[np.argmin(dispersivedata.ampdata, axis=1)]
-    # get charge degeneracies from this
-    def f(gate, fc, ampl, phase, freq):
-        return fc + np.abs(ampl) * np.sin(phase + 2 * np.pi * freq * gate)
+    def make_cutout(self, plot=False):
+        # do some magic
+        #estimate resonance frequencies
+        fr = self.freqdata[np.argmin(self.ampdata, axis=1)]
+        # get charge degeneracies from this
+        def f(gate, fc, ampl, phase, freq):
+            return fc + np.abs(ampl) * np.sin(phase + 2 * np.pi * freq * gate)
 
-    ig = [np.average(fr),
-          (np.max(fr) - np.min(fr)) / 2,
-          0,
-          2 / (np.max(dispersivedata.gatedata) - np.min(dispersivedata.gatedata))]
-    popt, pcov = curve_fit(f, dispersivedata.gatedata, fr, p0=ig)
+        ig = [np.average(fr),
+            (np.max(fr) - np.min(fr)) / 2,
+            0,
+            2 / (np.max(self.gatedata) - np.min(self.gatedata))]
+        popt, pcov = curve_fit(f, self.gatedata, fr, p0=ig)
 
-    # first find all charge degeneragy points
-    degenpoints = []
-    # these points are when sin is at its 1.5 np.pi + n*2*np.pi point
-    g0 = (-2 * popt[2] + 3 * np.pi) / (4 * popt[3] * np.pi)
-    gate_delta = 1 / popt[3]
-    print(g0, gate_delta)
+        # first find all charge degeneragy points
+        degenpoints = []
+        # these points are when sin is at its 1.5 np.pi + n*2*np.pi point
+        g0 = (-2 * popt[2] + 3 * np.pi) / (4 * popt[3] * np.pi)
+        gate_delta = 1 / popt[3]
+        print(g0, gate_delta)
 
-    g = g0
-    while g > np.min(dispersivedata.gatedata):
-        g -= gate_delta
-    g += gate_delta
-    while g < np.max(dispersivedata.gatedata):
-        degenpoints.append(g)
+        g = g0
+        while g > np.min(self.gatedata):
+            g -= gate_delta
         g += gate_delta
-    best_window = 0
-    best_index = 0
-    for i, gate in enumerate(degenpoints):
-        # calculate how big the datarange is
-        window = min(gate - np.min(dispersivedata.gatedata), gate_delta / 2) + min(np.max(dispersivedata.gatedata) - gate, gate_delta / 2)
-        if window > best_window:
-            best_window = window
-            best_index = i
+        while g < np.max(self.gatedata):
+            degenpoints.append(g)
+            g += gate_delta
+        best_window = 0
+        best_index = 0
+        for i, gate in enumerate(degenpoints):
+            # calculate how big the datarange is
+            window = min(gate - np.min(self.gatedata), gate_delta / 2) + min(np.max(self.gatedata) - gate, gate_delta / 2)
+            if window > best_window:
+                best_window = window
+                best_index = i
 
-    # use this info to find the window
-    window = [max(degenpoints[best_index] - gate_delta / 2, np.min(dispersivedata.gatedata)),
-              min(degenpoints[best_index] + gate_delta / 2, np.max(dispersivedata.gatedata))]
-    # and find the index points of these points
-    window_index = [np.argmin(np.abs(dispersivedata.gatedata - window[0])), np.argmin(np.abs(dispersivedata.gatedata - window[1]))]
-    if plot:
-        plt.figure()
-        plt.plot(dispersivedata.gatedata, fr)
-        plt.plot(dispersivedata.gatedata, f(dispersivedata.gatedata, *popt))
-        plt.axvline(x=dispersivedata.gatedata[window_index[0]])
-        plt.axvline(x=dispersivedata.gatedata[window_index[1]])
-        plt.show()
-    gatewindowslicer = slice(window_index[0], window_index[1])
-    return DispersiveShiftData(dispersivedata.gatedata[gatewindowslicer],
-                               dispersivedata.freqdata,
-                               dispersivedata.Idata[gatewindowslicer, :],
-                               dispersivedata.Qdata[gatewindowslicer, :])
-
-
-def fit_dispersiveshift(dispersivedata: DispersiveShiftData, plot=False):
-    model = dispersive.DispersiveHangerModel()
-
-    fitresult, _ = fit.fit1d(model, dispersivedata.cdata.ravel(), np.array([dispersivedata.gatedata[:, None], dispersivedata.freqdata[None, :]]),
-                             guess_kws=dict(gatedata=dispersivedata.gatedata, freqdata=dispersivedata.freqdata), plot=False, plot_guess=False)
-
-    if plot:
-        shape = (len(dispersivedata.gatedata), len(dispersivedata.freqdata))
-        fitted = model.func([dispersivedata.gatedata[:, None], dispersivedata.freqdata[None, :]], **fitresult.best_values).reshape(shape)
-        fig, axs = plt.subplots(2, 4, sharey=True, sharex=True)
-        axs[0, 0].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, dispersivedata.Idata.transpose())
-        axs[0, 1].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, np.real(fitted).transpose())
-        axs[0, 2].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, dispersivedata.Qdata.transpose())
-        axs[0, 3].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, np.imag(fitted).transpose())
-        axs[1, 0].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, dispersivedata.ampdata.transpose())
-        axs[1, 1].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, np.absolute(fitted).transpose())
-        axs[1, 2].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, dispersivedata.phidata.transpose())
-        axs[1, 3].pcolormesh(dispersivedata.gatedata, dispersivedata.freqdata, np.angle(fitted).transpose())
-        plt.show()
-    return fitresult
+        # use this info to find the window
+        window = [max(degenpoints[best_index] - gate_delta / 2, np.min(self.gatedata)),
+                min(degenpoints[best_index] + gate_delta / 2, np.max(self.gatedata))]
+        # and find the index points of these points
+        window_index = [np.argmin(np.abs(self.gatedata - window[0])), np.argmin(np.abs(self.gatedata - window[1]))]
+        if plot:
+            plt.figure()
+            plt.plot(self.gatedata, fr)
+            plt.plot(self.gatedata, f(self.gatedata, *popt))
+            plt.axvline(x=self.gatedata[window_index[0]])
+            plt.axvline(x=self.gatedata[window_index[1]])
+            plt.show()
+        gatewindowslicer = slice(window_index[0], window_index[1])
+        return DispersiveShiftData(self.gatedata[gatewindowslicer],
+                                   self.freqdata,
+                                   self.Idata[gatewindowslicer, :],
+                                   self.Qdata[gatewindowslicer, :])
 
 
-def fit_resonances(dispersivedata: DispersiveShiftData, **kw):
-    model = resonators.HangerModel_kappa()
-    fitresult = fit.array_fit1d(model, 
-                                dispersivedata.cdata, 
-                                dispersivedata.freqdata, 
-                                guess_kws=dict(fs=dispersivedata.freqdata), **kw)
-    return fitresult
+    def fit_dispersiveshift(self, plot=False):
+        model = dispersive.DispersiveHangerModel()
+
+        fitresult, _ = fit.fit1d(model, self.cdata.ravel(), np.array([self.gatedata[:, None], self.freqdata[None, :]]),
+                                guess_kws=dict(gatedata=self.gatedata, freqdata=self.freqdata), plot=False, plot_guess=False)
+
+        if plot:
+            shape = (len(self.gatedata), len(self.freqdata))
+            fitted = model.func([self.gatedata[:, None], self.freqdata[None, :]], **fitresult.best_values).reshape(shape)
+            fig, axs = plt.subplots(2, 4, sharey=True, sharex=True)
+            axs[0, 0].pcolormesh(self.gatedata, self.freqdata, self.Idata.transpose())
+            axs[0, 1].pcolormesh(self.gatedata, self.freqdata, np.real(fitted).transpose())
+            axs[0, 2].pcolormesh(self.gatedata, self.freqdata, self.Qdata.transpose())
+            axs[0, 3].pcolormesh(self.gatedata, self.freqdata, np.imag(fitted).transpose())
+            axs[1, 0].pcolormesh(self.gatedata, self.freqdata, self.ampdata.transpose())
+            axs[1, 1].pcolormesh(self.gatedata, self.freqdata, np.absolute(fitted).transpose())
+            axs[1, 2].pcolormesh(self.gatedata, self.freqdata, self.phidata.transpose())
+            axs[1, 3].pcolormesh(self.gatedata, self.freqdata, np.angle(fitted).transpose())
+            plt.show()
+        return fitresult
+
+
+    def fit_resonances(self, **kw):
+        model = resonators.HangerModel_kappa()
+        fitresult = fit.array_fit1d(model, 
+                                    self.cdata, 
+                                    self.freqdata, 
+                                    guess_kws=dict(fs=self.freqdata), **kw)
+        return fitresult
 
