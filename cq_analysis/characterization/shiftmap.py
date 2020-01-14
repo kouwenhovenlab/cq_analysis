@@ -125,17 +125,20 @@ class ShiftMap():
             (gate1data, gate2data) consisting of frequency fits at each
             point.
         """
-        orig_shape = self.cdata.shape
+        orig_shape = self.cdata.shape # For unflattening fit result
         model = resonators.HangerModel_kappa()
         init_params = {} if init_params is None else init_params
         fitresult = fit.array_fit1d(
             model, 
+            # Flatten gate axes to make effectively 1D
             self.cdata.reshape((orig_shape[0]*orig_shape[1], 
                                 orig_shape[2])), 
             self.freqdata, 
             guess_kws=dict(fs=self.freqdata.flatten()),
             init_params=init_params
         )
+        # Finally, unflatten the fitresult to restore the disctinction between
+        # gate axes
         reshaped_fitresult = fitresult
         for key in fitresult.keys():
             reshaped_fitresult[key] = np.array(fitresult[key]).reshape(orig_shape[0:2])
