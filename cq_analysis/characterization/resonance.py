@@ -36,3 +36,37 @@ class ResonanceData:
                                 guess_kws=dict(fs=self.freqdata), plot=plot, plot_guess=False, **kw)
 
         return fitresult
+
+    def get_init_params(self, fitresult=None):
+        """Get value and properties of constant fit parameters.
+
+        Keyword Arguments:
+        ------------------
+        fitresult (lmfit.model.FitResult): Optionally pass in a
+            custom fitting (even corresponding to another dataset)
+            for which the constant parameters are to be extracted
+            so that a fit calculation need not be repeated.
+
+        Returns:
+        --------
+        dict: Returns nested dictionary of all the lmfit.Parameter properties
+            (eg. {'vary': False}) of the HangerModel_kappa fit parameters 
+            which are constant. These parameters include 'k_e_mag', 'k_e_phase',
+            'amp_slope', 'amp_offset', 'phase_winding', 'phase_offset'. The
+            remaining fit parameters of 'f0' and 'k_i' are not included as these
+            are dependent on the measured sample's state.
+        """
+        if fitresult is None:
+            fitresult = self.fit_resonance() # Calculate resonator fit
+        init_params = dict(fitresult) # Cast fit result as dictionary
+        # Delete varying fit parameters to leave only constant ones
+        del init_params['f0'], init_params['k_i']
+        # Rewrite init_params as nested dictionary of Parameter properties
+        for key, val in init_params.items():
+            init_params[key] = {
+                'value': val.value,
+                'vary': False, # These parameters should be fixed across fits
+                'max': val.max,
+                'min': val.min
+            }
+        return init_params
