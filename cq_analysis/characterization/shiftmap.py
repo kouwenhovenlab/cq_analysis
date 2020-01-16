@@ -83,7 +83,7 @@ class ShiftMap():
         cube to display. freqindex must be < len(freqdata).
         """
         fig, axs = plt.subplots(2, 2, sharey=True, sharex=True)
-        im = axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata[freqindex,...].T)
+        im = axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata.T[freqindex,...])
         cb = fig.colorbar(im, ax=axs[0, 0])
         cb.set_label('I')
         im = axs[0, 1].pcolormesh(self.gate1data, self.gate2data, self.Qdata.T[freqindex,...])
