@@ -15,10 +15,9 @@ from cq_analysis.characterization import resonance
 class ShiftMap():
     """Class for fitting data-cubes of frequency scans along with 2 other axes."""
     @classmethod
-    def from_dataset(cls, ds, gate1_name, gate2_name, freq_name, magnitude_name, phase_name, transpose_gate2=False):
+    def from_dataset(cls, ds, gate1_name, gate2_name, freq_name, magnitude_name, phase_name):
         meshgrid = datadict_to_meshgrid(ds_to_datadict(ds))
-        return cls.from_meshgrid(meshgrid, gate1_name, gate2_name, freq_name, magnitude_name, phase_name, 
-                                 transpose_gate2=transpose_gate2)
+        return cls.from_meshgrid(meshgrid, gate1_name, gate2_name, freq_name, magnitude_name, phase_name)
 
     @classmethod
     def from_meshgrid(cls, meshgrid, gate1_name, gate2_name, freq_name, magnitude_name, phase_name, transpose_gate2=False):
@@ -27,7 +26,8 @@ class ShiftMap():
                 raise Exception('Gate 1 values are not cubic!')
         for gatesquare in meshgrid[gate2_name]['values']:
             if not np.all(gatesquare.T == gatesquare.T[0]):
-                raise Exception('Gate 2 values are not cubic!')
+                if not (np.all(gatesquare == gatesquare[0]) and transpose_gate2):
+                    raise Exception('Gate 2 values are not cubic!')
         for freqcolumn in meshgrid[freq_name]['values'].transpose():
             if not np.all(freqcolumn == freqcolumn[0]):
                 raise Exception('Frequency values are not cubic!')
@@ -44,15 +44,14 @@ class ShiftMap():
         if phase_data.shape != data_shape:
             raise Exception('Phase data_shape wrong'+str(mag_data.shape)+" != "+str(data_shape))
         cdata = 10**(mag_data/20)*np.exp(1j*phase_data)
-        return ShiftMap(gate1_data, gate2_data, freq_data, np.real(cdata), np.imag(cdata), 
-                        transpose_gate2=transpose_gate2)
+        return ShiftMap(gate1_data, gate2_data, freq_data, np.real(cdata), np.imag(cdata))
 
-    def __init__(self, gate1data, gate2data, freqdata, Idata, Qdata, transpose_gate2=False):
+    def __init__(self, gate1data, gate2data, freqdata, Idata, Qdata):
         self.gate1data = gate1data
         self.gate2data = gate2data
-        self.freqdata = freqdata.T if transpose_gate2 else freqdata
-        self.Idata = Idata.T if transpose_gate2 else Idata
-        self.Qdata = Qdata.T if transpose_gate2 else Qdata
+        self.freqdata = freqdata
+        self.Idata = Idata
+        self.Qdata = Qdata
 
         self.cdata = self.Idata + 1j*self.Qdata
         self.ampdata = np.sqrt(self.Idata**2 + self.Qdata**2)
