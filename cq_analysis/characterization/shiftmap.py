@@ -32,9 +32,7 @@ class ShiftMap():
                 raise Exception('Frequency values are not cubic!')
 
         gate1_data = meshgrid[gate1_name]['values'].transpose()[0,0,:]
-        print(gate1_data)
         gate2_data = meshgrid[gate2_name]['values'].transpose()[0,:,0]
-        print(gate2_data)
         freq_data = meshgrid[freq_name]['values'][0][0]
         mag_data = meshgrid[magnitude_name]['values']
         phase_data = meshgrid[phase_name]['values']
@@ -85,16 +83,16 @@ class ShiftMap():
         cube to display. freqindex must be < len(freqdata).
         """
         fig, axs = plt.subplots(2, 2, sharey=True, sharex=True)
-        im = axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata.transpose()[freqindex,...])
+        im = axs[0, 0].pcolormesh(self.gate1data, self.gate2data, self.Idata[freqindex,...].T)
         cb = fig.colorbar(im, ax=axs[0, 0])
         cb.set_label('I')
-        im = axs[0, 1].pcolormesh(self.gate1data, self.gate2data, self.Qdata.transpose()[freqindex,...])
+        im = axs[0, 1].pcolormesh(self.gate1data, self.gate2data, self.Qdata.T[freqindex,...])
         cb = fig.colorbar(im, ax=axs[0, 1])
         cb.set_label('Q')
-        im = axs[1, 0].pcolormesh(self.gate1data, self.gate2data, self.ampdata.transpose()[freqindex,...])
+        im = axs[1, 0].pcolormesh(self.gate1data, self.gate2data, self.ampdata.T[freqindex,...])
         cb = fig.colorbar(im, ax=axs[1, 0])
         cb.set_label('Magnitude')
-        im = axs[1, 1].pcolormesh(self.gate1data, self.gate2data, self.phidata.transpose()[freqindex,...])
+        im = axs[1, 1].pcolormesh(self.gate1data, self.gate2data, self.phidata.T[freqindex,...])
         cb = fig.colorbar(im, ax=axs[1, 1])
         cb.set_label('Phase')
         axs[1,0].set_xlabel("Gate 1 Voltage (V)")
@@ -145,7 +143,7 @@ class ShiftMap():
         # gate axes
         reshaped_fitresult = fitresult
         for key in fitresult.keys():
-            reshaped_fitresult[key] = np.array(fitresult[key]).reshape(orig_shape[0:2])
+            reshaped_fitresult[key] = np.array(fitresult[key]).reshape(orig_shape[0:2]).T
 
         if plot:
             plt.pcolormesh(self.gate1data, self.gate2data, reshaped_fitresult['f0'] / 1e9)
