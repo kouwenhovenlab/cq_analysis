@@ -20,24 +20,19 @@ class ShiftMap():
         return cls.from_meshgrid(meshgrid, gate1_name, gate2_name, freq_name, magnitude_name, phase_name)
 
     @classmethod
-    def from_meshgrid(cls, meshgrid, gate1_name, gate2_name, freq_name, magnitude_name, phase_name, transpose_gate2=False):
+    def from_meshgrid(cls, meshgrid, gate1_name, gate2_name, freq_name, magnitude_name, phase_name):
         for gatesquare in meshgrid[gate1_name]['values']:
             if not np.all(gatesquare == gatesquare[0]):
                 raise Exception('Gate 1 values are not cubic!')
         for gatesquare in meshgrid[gate2_name]['values']:
-            if not np.all(gatesquare.T == gatesquare.T[0]) and not transpose_gate2:
-                raise Exception('Gate 2 values are not cubic!')
-            elif not np.all(gatesquare == gatesquare[0]) and transpose_gate2:
+            if not np.all(gatesquare.T == gatesquare.T[0]):
                 raise Exception('Gate 2 values are not cubic!')
         for freqcolumn in meshgrid[freq_name]['values'].transpose():
             if not np.all(freqcolumn == freqcolumn[0]):
                 raise Exception('Frequency values are not cubic!')
 
         gate1_data = meshgrid[gate1_name]['values'].transpose()[0,0,:]
-        if transpose_gate2:
-            gate2_data = meshgrid[gate2_name]['values'].transpose()[0,0,:]
-        else:
-            gate2_data = meshgrid[gate2_name]['values'].transpose()[0,:,0]
+        gate2_data = meshgrid[gate2_name]['values'].transpose()[0,:,0]
         freq_data = meshgrid[freq_name]['values'][0][0]
         mag_data = meshgrid[magnitude_name]['values']
         phase_data = meshgrid[phase_name]['values']
