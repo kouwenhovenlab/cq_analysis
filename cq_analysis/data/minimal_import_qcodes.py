@@ -66,6 +66,6 @@ def load_last_qcodes_data(variable, earlier_index=0):
     '''
     e = qc.load_last_experiment()
     ds = e.last_data_set()
-    run_id = ds.run_id - earlier_data
-    return load_qcodes_data(run_id, variable)
+    run_id = int(ds.run_id) - earlier_index
+    return load_qcodes_data_by_id(run_id, variable)
 
