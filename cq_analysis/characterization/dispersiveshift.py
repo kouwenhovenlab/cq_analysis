@@ -49,7 +49,7 @@ class DispersiveShiftData:
         # data[gate, frequency]
 
     def make_resonancedata(self, i):
-        return resonance.ResonanceData(self.freqdata, self.Idata[i], self.Qdata[i])
+        return resonance.ResonanceData(self.freqdata[i], self.Idata[i], self.Qdata[i])
 
     def plot(self):
         fig, axs = plt.subplots(2, 2, sharey=True, sharex=True)
