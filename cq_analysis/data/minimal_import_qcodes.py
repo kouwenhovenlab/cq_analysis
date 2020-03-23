@@ -2,7 +2,7 @@ import qcodes as qc
 import pandas as pd
 import numpy as np
 
-def load_qcodes_data_by_id(id, variable):
+def load_qcodes_data_by_id(id, variable, verbose=True):
     '''
     Minimal loader of data from Qcodes database. Loads
     a dataset for given id and a single name of 
@@ -29,8 +29,11 @@ def load_qcodes_data_by_id(id, variable):
     data = qc.load_by_id(id)
     data_dict = data.get_data_as_pandas_dataframe()
 
+    if type(variable) == str:
+        variable = [variable]
+
     try:
-        d = data_dict[variable]
+        d = data_dict[variable[0]]
 
         # 2D data
         if isinstance(d.index, pd.core.index.MultiIndex):
@@ -39,23 +42,31 @@ def load_qcodes_data_by_id(id, variable):
             y = d.columns.get_level_values(1).values
             v = d.values.transpose()#[:,::-1]
 
-            x_name = d.index.name
-            y_name = d.columns.names[1]
-            v_name = d.columns.get_level_values(0)[0]
+            returned = [x,y,v]
+            if len(variable)>1:
+                for var in variable[1:]:
+                    d = data_dict[var]
+                    d = d.unstack()
+                    returned.append(d.values.transpose())
 
-            return x,y,v#,x_name,y_name,v_name
+            return tuple(returned)
 
         # 1D data
         else:
             x = d.index.values
             v = d.values.squeeze()
 
-            x_name = d.index.name
-            v_name = d.columns[0]
+            returned = [x,v]
+            if len(variable)>1:
+                for var in variable[1:]:
+                    d = data_dict[var]
+                    returned.append(d.values.squeeze())
 
-            return x,v#,x_name,v_name
+            return tuple(returned)
+
     except KeyError:
-        print(list(data_dict.keys()))
+        if verbose:
+            print(list(data_dict.keys()))
 
 def load_last_qcodes_data(variable, earlier_index=0):
     '''

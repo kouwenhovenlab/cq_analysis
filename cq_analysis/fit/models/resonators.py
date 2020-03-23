@@ -200,8 +200,8 @@ class HangerReflectionModel(lmfit.Model):
         sig *= np.exp(1j * (phase_offset + phase_winding * (fs - fs[0])))
         return sig
 
-    def __init__(self):
-        super().__init__(self.func)
+    def __init__(self, **kwargs):
+        super().__init__(self.func, **kwargs)
 
     @staticmethod
     def guess_logic(data, fs, edge_fracs=(20, 20)):
@@ -277,7 +277,7 @@ class HangerReflectionModel(lmfit.Model):
         # look at the average derivative at the edges, and ignore obvious jumps
         phase_diffs = np.append(np.diff(phi)[:npts // e0],
                                 np.diff(phi)[-npts // e1])
-        phase_winding = phase_diffs[np.abs(phase_diffs) < np.pi / 8.].mean()
+        phase_winding = phase_diffs[np.abs(phase_diffs) < np.pi / 2.].mean()
 
         p0 = self.make_params(
             f0=fs[np.argmin(mag)],
