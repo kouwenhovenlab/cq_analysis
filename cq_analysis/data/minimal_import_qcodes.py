@@ -36,7 +36,7 @@ def load_qcodes_data_by_id(id, variable, verbose=True):
         d = data_dict[variable[0]]
 
         # 2D data
-        if isinstance(d.index, pd.core.index.MultiIndex):
+        if isinstance(d.index, pd.MultiIndex):
             d = d.unstack()
             x = d.index.values#[::-1]
             y = d.columns.get_level_values(1).values
