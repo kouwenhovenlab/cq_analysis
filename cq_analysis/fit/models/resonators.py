@@ -295,7 +295,27 @@ class HangerReflectionModel(lmfit.Model):
 
 class ResonatorReflectionWithAmp(lmfit.Model):
     """
-    To ignore the reflection from the amp fix g=0 and a=1
+    Resonator model described in https://arxiv.org/abs/2110.03257.
+
+    Parameters:
+    - f0 [Hz] - resonator frequency
+    - Qi [1] - internal quality factor
+    - Qe [1] - external quality factor
+    - a [1] - reflection coefficient of the amplifier
+            (0.398 for CITLF2 HEMT amp)
+    - g [1] - coupling coefficient of the directional coupler
+            (0.178 for MiniCrcuits ZEDC-15-2B)
+    - fcav [MHz] - period of the background oscillations
+            due to cavity between amp and the device
+    - phi [rad] - phase offset at the amp reflection
+            (should be 0, but may need to be left free in the final fit)
+    - amp_slope [1] - additional slope of the transmission amplitude
+    - amp_offset [measurement device units] - amplitude
+        corresponding to the full transmission
+    - phase_winding [rad/Hz]
+    - phase_offset [rad]
+
+    To ignore the reflection from the amp fix g=0 and a=1.
     """
 
     @staticmethod
