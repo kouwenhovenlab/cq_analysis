@@ -365,7 +365,7 @@ class HangerReflectionModel_IQoffset(lmfit.Model):
     modified by adding a phenomenological offset in IQ plane.
     Parameters:
     - f0 [Hz] - resonator frequency
-    - Qi [1] - internal quality factor
+    - Q_i [1] - internal quality factor
     - Q_e_mag [1] - magnitude of the external quality factor
     - Q_e_phase [rad] - phase of the external quality factor, indicating
         mismatch between input and output impedance
@@ -387,7 +387,7 @@ class HangerReflectionModel_IQoffset(lmfit.Model):
         return S21 + I_offset +1j*Q_offset
 
     @staticmethod
-    def func(fs, f0, Qi, Q_e_mag, amp_slope, amp_offset,
+    def func(fs, f0, Q_i, Q_e_mag, amp_slope, amp_offset,
              phase_winding, phase_offset,  I_offset, Q_offset):
         sig = HangerReflectionModel_IQoffset.s21_modified_khalil(fs, f0, Qi, Q_e_mag,  I_offset, Q_offset)
         sig *= amp_offset * (1. + amp_slope * (fs - f0) / f0)
