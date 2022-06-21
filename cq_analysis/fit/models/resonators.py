@@ -389,7 +389,7 @@ class HangerReflectionModel_IQoffset(lmfit.Model):
     @staticmethod
     def func(fs, f0, Q_i, Q_e_mag, amp_slope, amp_offset,
              phase_winding, phase_offset,  I_offset, Q_offset):
-        sig = HangerReflectionModel_IQoffset.s21_modified_khalil(fs, f0, Qi, Q_e_mag,  I_offset, Q_offset)
+        sig = HangerReflectionModel_IQoffset.s21_modified_khalil(fs, f0, Q_i, Q_e_mag,  I_offset, Q_offset)
         sig *= amp_offset * (1. + amp_slope * (fs - f0) / f0)
         sig *= np.exp(1j * (phase_offset + phase_winding * fs))
         return sig
