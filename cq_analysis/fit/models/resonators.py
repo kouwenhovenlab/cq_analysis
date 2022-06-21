@@ -362,9 +362,7 @@ class HangerReflectionModel_IQoffset(lmfit.Model):
     """
     Hanger model from
     Khalil et al. Journal of Applied Physics 111, 054510 (2012)
-    modified to measurements in reflection.
-    Eq. (12) has a small modification:
-    (1+e)(1-BLA) -> (1+e)(1-2*BLA)
+    modified by adding a phenomenological offset in IQ plane.
     Parameters:
     - f0 [Hz] - resonator frequency
     - Qi [1] - internal quality factor
